@@ -1,38 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user,  AnonymousUserMixin
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
+from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI
+from models import db, User, Role, user_roles
+from forms import LoginForm
+from auth import login_manager, load_user
+from flask_login import login_required, logout_user, current_user, AnonymousUserMixin, login_user
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+
+# Initialize extensions
+db.init_app(app)
+login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# User Model
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-
-class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
-# Role Model
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-
-# User-Role Association Table
-user_roles = db.Table(
-    'user_roles',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('role_id', db.Integer, db.ForeignKey('role.id'), primary_key=True)
-)
 # Function to insert the predefined "admin" user
 def insert_admin_user():
     admin = User.query.filter_by(username='admin').first()
@@ -48,10 +29,6 @@ def insert_admin_user():
         db.session.execute(admin_role_connection)
         db.session.commit()
     
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 def has_role(role_name):
     user_roles_data = db.session.query(user_roles).filter_by(user_id=current_user.id).all()
@@ -107,10 +84,7 @@ def admin():
 
             if not existing_user:
                 new_user = User(username=username, password=password)
-                
                 db.session.add(new_user)
-
-
                 # Now that the new_user has been added to the database, you can get its id
                 new_user = User.query.filter_by(username=username).first()
                 new_user_id = new_user.id
@@ -157,6 +131,18 @@ def door1():
         return redirect(url_for('login', next=request.path))  # Store the target URL
 
     if has_role("door1"):
+        print("doors opened")
+        return render_template("accept.html")
+    else :
+        print("doors closed")
+        return render_template('reject.html')
+    
+@app.route('/door2')
+def door2():
+    if isinstance(current_user, AnonymousUserMixin):
+        return redirect(url_for('login', next=request.path))  # Store the target URL
+
+    if has_role("door2"):
         print("doors opened")
         return render_template("accept.html")
     else :
