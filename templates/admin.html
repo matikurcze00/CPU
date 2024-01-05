@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+</head>
+<body>
+    <h1>Welcome, Admin</h1>
+    
+    <h2>Add New User</h2>
+    <form method="POST">
+        <label for="username">Username:</label>
+        <input type="text" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" name="password" required><br>
+        
+        <!-- Roles -->
+        <label for="roles">Roles:</label>
+        <select name="roles" multiple>
+            {% for role in roles %}
+                <option value="{{ role.id }}">{{ role.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Add User">
+    </form>
+    
+    <h2>Users List</h2>
+    <ul>
+        {% for user in users %}
+        <li>
+            <strong>{{ user.username }}</strong>
+            <ul>
+                {% for user_role in user_roles %}
+                {% if user_role.user_id == user.id %}
+                <li>{{ roles[user_role.role_id-1].name }}</li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Roles List</h2>
+    <ul>
+        {% for role in roles %}
+            <li>{{role.id}} {{ role.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('add_role') }}">Add New Role</a>
+
+    
+    <h2>Add New Role</h2>
+    <form method="POST" action="{{ url_for('add_role') }}">
+        <label for="role_name">Role Name:</label>
+        <input type="text" name="role_name" required>
+        <input type="submit" value="Add Role">
+    </form>
+
+</body>
+</html>
