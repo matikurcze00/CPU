@@ -130,11 +130,19 @@ def door1():
     if isinstance(current_user, AnonymousUserMixin):
         return redirect(url_for('login', next=request.path))  # Store the target URL
 
-    if has_role("door1"):
-        print("doors opened")
-        return render_template("accept.html")
-    else :
-        print("doors closed")
+    # Check IPs
+    user_ip = request.remote_addr
+    approved_ip = '127.0.0.1' # finds local host ip address. For real use, set value to local wifi/VPN ip address 
+    
+    if user_ip == approved_ip:
+        if has_role("door1"):
+            print("doors opened")
+            return render_template("accept.html")
+        else :
+            print("doors closed")
+            return render_template('reject.html')
+    else:
+        print("doors closed, wrong ip")
         return render_template('reject.html')
     
 @app.route('/door2')
@@ -142,11 +150,19 @@ def door2():
     if isinstance(current_user, AnonymousUserMixin):
         return redirect(url_for('login', next=request.path))  # Store the target URL
 
-    if has_role("door2"):
-        print("doors opened")
-        return render_template("accept.html")
-    else :
-        print("doors closed")
+    # Check IPs
+    user_ip = request.remote_addr
+    approved_ip = '127.0.0.1' # finds local host ip address. For real use, set value to local wifi/VPN ip address 
+    
+    if user_ip == approved_ip:
+        if has_role("door1"):
+            print("doors opened")
+            return render_template("accept.html")
+        else :
+            print("doors closed")
+            return render_template('reject.html')
+    else:
+        print("doors closed, wrong ip")
         return render_template('reject.html')
 
 
